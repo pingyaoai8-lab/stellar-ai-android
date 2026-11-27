@@ -1,1 +1,44 @@
 
+name: Stellar AI Android Build
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'stellar-ai.zip'
+      - '.github/workflows/android-build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Extract Stellar AI
+        run: |
+          mkdir -p source
+          unzip -q stellar-ai.zip -d source
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+
+      - name: Build Android APK
+        working-directory: source
+        run: gradle assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: StellarAI-debug
+          path: source/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
